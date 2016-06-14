@@ -1,0 +1,251 @@
+<html>
+  <head>
+    <title>Craps</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <style>
+      body {
+        padding:20px;
+      }
+      h1 {
+        text-align:center;
+        margin-bottom:50px;
+      }
+      .name {width:169px}
+      #instructions {width:525px;margin:0 auto; text-align:center;margin-bottom:20px;}
+      #bets {width:600px;margin:0 auto;}
+      #dice {
+        width:300px;
+        text-align:center;
+        margin:0 auto;
+      }
+      ul {
+        list-style: none;
+        margin:0;
+        padding:0;
+      }
+      span.red {font-weight:bold;color:red}
+      span.blue {font-weight:bold;color:blue}
+      span.green {font-weight:bold;color:green}
+      #dice input {font-size:20px}
+      #dice li:first-child{font-size:100px;}
+      #dice li {font-size: 60px;}
+      td, th {text-align:center;}
+      .table > tbody > tr > td > .input-group {width:80px}
+      .table > tbody > tr > td {vertical-align:middle}
+      .input-group-addon {padding:6px 6px}
+      .pokerchip{
+        margin:.05em;
+        padding-top:4px;
+        color:white;
+        font-size:1em;
+        position:relative;
+        display:inline-block;
+        -webkit-box-sizing:border-box;
+        -moz-box-sizing:border-box;
+        box-sizing:border-box;
+        width:2em;
+        height:2em;
+        background:#555;
+        border-radius:50%;
+        position:relative;
+        border:.15em dashed white;
+        transition:all .5s ease;
+        backface-visibility:hidden;
+        box-shadow:0 0 0 .2em #fff;
+        cursor:pointer;
+      }
+      .pokerchip.red{
+        background:red;
+      }
+      .pokerchip.blue{
+        background:blue;
+      }
+      .pokerchip.green{
+        background:green;
+      }
+      .pokerchip.red:after{
+        content:"5";
+      }
+      .pokerchip.blue:after{
+        content:"10";
+      }
+      .pokerchip.green:after{
+        content:"25";
+      }
+      .pokerchip.black:after{
+        content:"50";
+      }
+    </style>
+    <script>
+      var point = 0;
+      var pass = function(natural) {
+        point=0; console.log('pass');
+        $(r).css('color','green');
+        //b = $('#balance')[0];
+        //b.innerHTML = parseInt(b.innerHTML) + parseInt($('#pass input')[0].value || 0);
+        //$('#pass input').prop('disabled',false);
+        $('#bets tbody tr').each(function(i,v){
+            //$(v).find('.dontpass')[0].value = 0;
+            $(v).find('.bet').prop('disabled',false);
+            b = $(v).find('.balance')[0];
+            payout = parseInt($(v).find('.pass')[0].value || 0)*2;
+            if (natural) payout = payout/2;
+            b.innerHTML = parseInt(b.innerHTML) + payout; 
+        });
+      }
+      var dontpass = function(r) {
+        point=0;
+        console.log("don't pass"); 
+        $(r).css('color','red');
+        $('#bets tbody tr').each(function(i,v){
+            $(v).find('.pass')[0].value = 0;
+            $(v).find('.bet').prop('disabled',false);
+            b = $(v).find('.balance')[0];
+            //b.innerHTML = parseInt(b.innerHTML) + parseInt($(v).find('.dontpass')[0].value || 0);
+        });
+        //$('#pass input')[0].value = '';
+        //$('#pass input').prop('disabled',false);
+      }
+      var validate = function(callback){
+        var error = false;
+        $('.bet').each(function(i,v){
+            if(!$.isNumeric(v.value) || v.value < 0){
+              error = true;
+              $(v).parent().addClass('has-error');
+            }
+            else $(v).parent().removeClass('has-error');
+            if (i==$('.bet').length-1 && error == false) callback();
+          });
+      }
+      var roll = function(){
+        r = document.createElement('li');
+        output = '';
+        d = [];
+        for (i=0;i<2; i++){
+          face = Math.floor(Math.random()*6);
+          output += "&#x268" + face + "; ";
+          d.push(face+1);
+        }
+        if ([7,11].indexOf(d[0]+d[1])>-1 && point==0) pass(true);
+        else if ([2,3,12].indexOf(d[0]+d[1])>-1 && point==0) dontpass(r);
+        else if (d[0]+d[1]==7 && point!=0) dontpass(r);
+        else if (point==0) {
+          point = d[0]+d[1];
+          $(r).css('color','blue');
+          $('#bets tbody tr').each(function(i,v){
+              b = $(v).find('.balance')[0];
+              b.innerHTML = parseInt(b.innerHTML) - parseInt($(v).find('.pass')[0].value || 0 );
+              $(v).find('.bet').prop('disabled',true);
+              });
+        }
+        else if (point==d[0]+d[1]) pass();
+        console.log(d[0]+d[1], point);
+        r.innerHTML = output;
+        list = document.getElementById('diceList')
+        list.insertBefore(r,list.firstChild);
+      }
+    </script>
+  </head>
+  <body>
+        <h1>Craps</h1>
+        <div id="instructions"><b>Instructions: </b> Rolling a 7 or 11 on your first roll is <span class="green">a win</span>. Rolling a 2, 3, or 12 is a <span class="red">loss</span>. Rolling 4, 5, 6, 8, 9, 10 <span class="blue">establishes your point</span>. You must now roll that number again in order to <span class="green">win</span>. If you roll a 7 before your point number, <span class="red">you lose</span>.
+        </div>
+      <div id="bets">
+        <table class="table table-hover table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Player</th><th>Name</th><th>Balance</th><th>Bet</th><th>Chips</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><input type="text" class="name form-control"></td>
+              <td>$<span class="balance">1000</spa></td>
+              <td>
+                <div class="input-group">
+                  <div class="input-group-addon">$</div>
+                  <input type="text" class="bet pass form-control" value="0">
+                </div>
+              </td>
+              <td>
+                <div class="pokerchip red"></div>
+                <div class="pokerchip blue"></div>
+                <div class="pokerchip green"></div>
+                <div class="pokerchip black"></div>
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><input type="text" class="name form-control"></td>
+              <td>$<span class="balance">1000</spa></td>
+              <td>
+                <div class="input-group">
+                  <div class="input-group-addon">$</div>
+                  <input type="text" class="bet pass form-control" value="0">
+                </div>
+              </td>
+              <td>
+                <div class="pokerchip red"></div>
+                <div class="pokerchip blue"></div>
+                <div class="pokerchip green"></div>
+                <div class="pokerchip black"></div>
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><input type="text" class="name form-control"></td>
+              <td>$<span class="balance">1000</spa></td>
+              <td>
+                <div class="input-group">
+                  <div class="input-group-addon">$</div>
+                  <input type="text" class="bet pass form-control" value="0">
+                </div>
+              </td>
+              <td>
+                <div class="pokerchip red"></div>
+                <div class="pokerchip blue"></div>
+                <div class="pokerchip green"></div>
+                <div class="pokerchip black"></div>
+              </td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><input type="text" class="name form-control"></td>
+              <td>$<span class="balance">1000</spa></td>
+              <td>
+                <div class="input-group">
+                  <div class="input-group-addon">$</div>
+                  <input type="text" class="bet pass form-control" value="0">
+                </div>
+              </td>
+              <td>
+                <div class="pokerchip red"></div>
+                <div class="pokerchip blue"></div>
+                <div class="pokerchip green"></div>
+                <div class="pokerchip black"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="dice">
+        <input type="button" value="Roll" onclick="validate(roll)">
+        <ul id="diceList"></ul>
+      </div>
+      <script>
+        $('.pokerchip').click(function(){
+          var value = { red: 5, blue: 10, green: 25, black: 50};
+          var chip = $(this).attr("class").split(' ')[1];
+          var bet = $(this).parent().parent().find('.bet')[0];
+          if (point == 0){
+            validate(function(){
+              bet.value = parseInt(bet.value) + value[chip];
+            });
+          }
+          
+        });
+      </script>
+  </body>
+</html>
